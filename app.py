@@ -105,18 +105,48 @@ from flask import send_from_directory
 @app.route('/upload/<int:sem_id>/<subject_name>', methods=['POST'])
 @login_required
 def upload_file(sem_id, subject_name):
-    file = request.files['file']
-    sem = Semester.query.get_or_404(sem_id)
-    folder_path = os.path.join(
-        app.config['UPLOAD_FOLDER'],
-        current_user.username,
-        f"Semester{sem.number}",
-        subject_name
-    )
-    os.makedirs(folder_path, exist_ok=True)
-    file_path = os.path.join(folder_path, file.filename)
-    file.save(file_path)
-    return redirect(url_for('semester_view', sem_id=sem_id))
+    try:
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'warning')
+            return redirect(request.referrer)
+
+        sem = Semester.query.get_or_404(sem_id)
+        folder_path = os.path.join(
+            app.config['UPLOAD_FOLDER'],
+            current_user.username,
+            f"Semester{sem.number}",
+            subject_name
+        )
+        os.makedirs(folder_path, exist_ok=True)
+        file_path = os.path.join(folder_path, file.filename)
+        file.save(file_path)
+
+        flash("✅ File uploaded successfully!", "success")
+        return redirect(url_for('semester_view', sem_id=sem_id))
+    except Exception as e:
+        return f"❌ Upload Failed: {e}", 500
+
+
+@app.route('/delete/<int:sem_id>/<subject_name>/<filename>', methods=['POST'])
+@login_required
+def delete_file(sem_id, subject_name, filename):
+    try:
+        sem = Semester.query.get_or_404(sem_id)
+        folder_path = os.path.join(
+            app.config['UPLOAD_FOLDER'],
+            current_user.username,
+            f"Semester{sem.number}",
+            subject_name
+        )
+        file_path = os.path.join(folder_path, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            flash("🗑️ File deleted!", "info")
+        return redirect(url_for('semester_view', sem_id=sem_id))
+    except Exception as e:
+        return f"❌ Delete Failed: {e}", 500
+
 
 
 from flask import send_from_directory
