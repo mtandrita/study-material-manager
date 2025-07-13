@@ -102,11 +102,21 @@ def logout():
 
 from flask import send_from_directory
 
-@app.route('/download/<path:filename>')
+@app.route('/upload/<int:sem_id>/<subject_name>', methods=['POST'])
 @login_required
-def download_file(filename):
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], current_user.username)
-    return send_from_directory(filepath, filename, as_attachment=True)
+def upload_file(sem_id, subject_name):
+    file = request.files['file']
+    sem = Semester.query.get_or_404(sem_id)
+    folder_path = os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        current_user.username,
+        f"Semester{sem.number}",
+        subject_name
+    )
+    os.makedirs(folder_path, exist_ok=True)
+    file_path = os.path.join(folder_path, file.filename)
+    file.save(file_path)
+    return redirect(url_for('semester_view', sem_id=sem_id))
 
 
 @app.route('/delete/<int:sem_id>/<subject_name>/<filename>', methods=['POST'])
