@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h2>Semester {{ semester.number }}</h2>
+  <h2 class="text-center mb-4">📚 Semester {{ semester.number }}</h2>
   <div class="row">
     {% for subject in semester.subjects %}
-      <div class="col-md-6 mb-3">
+      <div class="col-md-6 mb-4">
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">{{ subject.name }}</h5>
-            <ul class="list-group">
+
+            <ul class="list-group mb-3">
               {% set folder_path = config['UPLOAD_FOLDER'] ~ '/' ~ current_user.username ~ '/Semester' ~ semester.number|string ~ '/' ~ subject.name %}
               {% if os.path.exists(folder_path) %}
                 {% set files = os.listdir(folder_path) %}
@@ -30,6 +31,15 @@
                 <li class="list-group-item text-muted"><i>No files yet</i></li>
               {% endif %}
             </ul>
+
+            <!-- Upload form -->
+            <form method="POST" action="{{ url_for('upload_file', sem_id=semester.id, subject_name=subject.name) }}" enctype="multipart/form-data">
+              <div class="input-group">
+                <input type="file" name="file" class="form-control" required>
+                <button type="submit" class="btn btn-success">Upload</button>
+              </div>
+            </form>
+
           </div>
         </div>
       </div>
