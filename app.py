@@ -119,24 +119,14 @@ def upload_file(sem_id, subject_name):
     return redirect(url_for('semester_view', sem_id=sem_id))
 
 
-@app.route('/delete/<int:sem_id>/<subject_name>/<filename>', methods=['POST'])
+from flask import send_from_directory
+
+@app.route('/download/<path:filename>')
 @login_required
-def delete_file(sem_id, subject_name, filename):
-    sem = Semester.query.get_or_404(sem_id)
-    file_path = os.path.join(
-        app.config['UPLOAD_FOLDER'],
-        current_user.username,
-        f"Semester{sem.number}",
-        subject_name,
-        filename
-    )
-    try:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            flash(f"Deleted {filename}", "warning")
-    except Exception as e:
-        flash(f"Error deleting file: {str(e)}", "danger")
-    return redirect(url_for('semester_view', sem_id=sem.id))
+def download_file(filename):
+    folder = os.path.join(app.config['UPLOAD_FOLDER'], current_user.username)
+    return send_from_directory(folder, filename, as_attachment=True)
+
 
 if __name__ == '__main__':
     with app.app_context():
