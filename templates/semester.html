@@ -2,8 +2,8 @@
 {% block content %}
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">📚 Semester {{ semester.number }}</h2>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light">← Back to Dashboard</a>
+    <h2>📚 Semester {{ semester.number }}</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light">← Back</a>
   </div>
 
   <div class="row">
@@ -18,13 +18,13 @@
               {% if os.path.exists(folder_path) %}
                 {% set files = os.listdir(folder_path) %}
                 {% if files %}
-                  {% for file in files if file != '__pycache__' %}
+                  {% for file in files %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                       <a href="{{ url_for('download_file', filename='Semester' ~ semester.number|string ~ '/' ~ subject.name ~ '/' ~ file) }}">
-
+                        📄 {{ file }}
                       </a>
                       <form method="POST" action="{{ url_for('delete_file', sem_id=semester.id, subject_name=subject.name, filename=file) }}">
-                        <button type="submit" class="btn btn-sm btn-outline-danger ms-2">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                       </form>
                     </li>
                   {% endfor %}
@@ -36,7 +36,6 @@
               {% endif %}
             </ul>
 
-            <!-- Upload form -->
             <form method="POST" action="{{ url_for('upload_file', sem_id=semester.id, subject_name=subject.name) }}" enctype="multipart/form-data">
               <div class="input-group">
                 <input type="file" name="file" class="form-control" required>
