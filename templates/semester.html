@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📘 Semester {{ semester.number }}</h2>
+
+{% for subject in semester.subjects %}
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">{{ subject.name }}</h5>
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="subject_id" value="{{ subject.id }}">
+        <div class="input-group">
+          <input type="file" name="file" class="form-control" required>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+      </form>
+
+      <p class="mt-3"><strong>Files:</strong></p>
+      <ul>
+        {% set folder_path = config['UPLOAD_FOLDER'] ~ '/' ~ current_user.username ~ '/Semester' ~ semester.number|string ~ '/' ~ subject.name %}
+        {% for file in os.listdir(folder_path) if file != '__pycache__' %}
+          <li class="d-flex justify-content-between align-items-center">
+  <a href="{{ url_for('download_file', filename='Semester' ~ semester.number|string ~ '/' ~ subject.name ~ '/' ~ file) }}">
+    📄 {{ file }}
+  </a>
+  <form method="POST" action="{{ url_for('delete_file', sem_id=semester.id, subject_name=subject.name, filename=file) }}">
+    <button type="submit" class="btn btn-sm btn-outline-danger ms-2">Delete</button>
+  </form>
+</li>
+
+        {% else %}
+          <li><i>No files yet</i></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endfor %}
+
+<a class="btn btn-secondary" href="{{ url_for('dashboard') }}">← Back</a>
+{% endblock %}
