@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semester Manager 2.0</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <header class="navbar">
+            <div class="logo">📚 SEM Manager</div>
+            <nav class="nav-tabs">
+                <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+                <button class="tab-btn" data-tab="pomodoro">Pomodoro</button>
+                <button class="tab-btn" data-tab="subjects">Subjects</button>
+                <button class="tab-btn" data-tab="dates">Important Dates</button>
+                <button class="tab-btn" data-tab="goals">Weekly Goals</button>
+                <button class="tab-btn" data-tab="statistics">Study Stats</button>
+                <button class="tab-btn" data-tab="help">Help</button>
+            </nav>
+        </header>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h1>Dashboard</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-content">
+                            <h3>Total Hours Studied</h3>
+                            <p class="stat-value" id="hoursDisplay">0 hrs</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-content">
+                            <h3>Subjects</h3>
+                            <p class="stat-value" id="subjectsCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <h3>Upcoming Deadlines</h3>
+                            <p class="stat-value" id="datesCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3>Weekly Goals</h3>
+                            <p class="stat-value" id="goalsCount">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card streak-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-content">
+                            <h3>Study Streak</h3>
+                            <p class="stat-value" id="streakCount">0</p>
+                            <p class="streak-subtitle" id="streakSubtitle">days</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto;">
+                    <div class="streak-info-box">
+                        <h3>🏆 Longest Streak</h3>
+                        <p class="streak-record" id="longestStreakDisplay">0 days</p>
+                        <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">Your best consecutive days!</p>
+                    </div>
+                    <div class="streak-info-box">
+                        <h3>⏰ Last Study</h3>
+                        <p class="streak-record" id="lastStudyDisplay">Never</p>
+                        <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">Keep the streak alive!</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <button id="resetHoursBtn" class="btn btn-danger" onclick="resetHours()">Reset Hours Studied</button>
+                    <button id="resetStreakBtn" class="btn btn-danger" onclick="resetStreak()" style="margin-left: 1rem;">Reset Streak</button>
+                </div>
+
+                <div class="dashboard-sections">
+                    <div class="dashboard-section">
+                        <h2>Recent Subjects</h2>
+                        <ul class="subjects-list" id="dashboardSubjects">
+                            <li>No subjects added yet</li>
+                        </ul>
+                    </div>
+                    <div class="dashboard-section">
+                        <h2>Upcoming Deadlines</h2>
+                        <ul class="dates-list" id="dashboardDates">
+                            <li>No deadlines added yet</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pomodoro Tab -->
+            <div id="pomodoro" class="tab-content">
+                <h1>Pomodoro Timer</h1>
+                <div class="timer-container">
+                    <div class="timer-display" id="timerDisplay">
+                        <div class="timer-mode" id="timerMode">Focus Time</div>
+                        <div class="timer-time" id="timerTime">25:00</div>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="btn btn-primary" id="toggleBtn">Start</button>
+                        <button class="btn btn-secondary" id="resetBtn">Reset</button>
+                    </div>
+                    <div class="timer-info">
+                        <p>Focus: 25 minutes | Break: 5 minutes</p>
+                        <p id="timerMessage">Stay focused! You can do this! 💪</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subjects Tab -->
+            <div id="subjects" class="tab-content">
+                <h1>Subjects</h1>
+                <div class="subjects-container">
+                    <div class="add-subject-form">
+                        <h2>Add New Subject</h2>
+                        <form id="subjectForm">
+                            <input type="text" id="subjectName" placeholder="Subject Name" required>
+                            <input type="text" id="professorName" placeholder="Professor Name">
+                            <input type="text" id="schedule" placeholder="Schedule (e.g., Mon, Wed, Fri)">
+                            <input type="text" id="grade" placeholder="Current Grade">
+                            <label for="pdfFile" style="display: block; margin-top: 0.5rem; font-weight: 600; color: #333;">Subject Materials (PDF):</label>
+                            <input type="file" id="pdfFile" accept=".pdf" style="padding: 0.5rem; border: 2px solid #eee; border-radius: 8px;">
+                            <button type="submit" class="btn-add">Add Subject</button>
+                        </form>
+                    </div>
+                    <div class="subjects-list-container">
+                        <h2>Your Subjects</h2>
+                        <div class="subjects-grid" id="subjectsGrid">
+                            <p class="empty-message">No subjects added yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Subject Modal -->
+                <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                        <h2>Edit Subject</h2>
+                        <form id="editSubjectForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <input type="hidden" id="editSubjectId">
+                            <input type="text" id="editSubjectName" placeholder="Subject Name" required>
+                            <input type="text" id="editProfessorName" placeholder="Professor Name">
+                            <input type="text" id="editSchedule" placeholder="Schedule">
+                            <input type="text" id="editGrade" placeholder="Current Grade">
+                            
+                            <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin-bottom: 0.5rem;">📄 Materials</h3>
+                                <div id="existingPdfs"></div>
+                                <label style="display: block; margin-top: 1rem; font-weight: 600; color: #333;">Add More PDFs:</label>
+                                <input type="file" id="editPdfFile" accept=".pdf" style="padding: 0.5rem; border: 2px solid #eee; border-radius: 8px; width: 100%; margin-top: 0.5rem;">
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem;">
+                                <button type="submit" class="btn-add" style="flex: 1;">Save Subject</button>
+                                <button type="button" onclick="closeEditModal()" style="flex: 1; background: #ccc; color: #333; border: none; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Dates Tab -->
+            <div id="dates" class="tab-content">
+                <h1>Important Dates</h1>
+                <div class="dates-container">
+                    <div class="add-date-form">
+                        <h2>Add New Date</h2>
+                        <form id="dateForm">
+                            <select id="dateType">
+                                <option value="Exam">Exam</option>
+                                <option value="Assignment">Assignment</option>
+                                <option value="Project">Project</option>
+                                <option value="Quiz">Quiz</option>
+                                <option value="Presentation">Presentation</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <input type="text" id="dateDescription" placeholder="Description" required>
+                            <input type="date" id="dueDate" required>
+                            <button type="submit" class="btn-add">Add Date</button>
+                        </form>
+                    </div>
+                    <div class="dates-list-container">
+                        <h2>Upcoming Deadlines</h2>
+                        <div class="dates-list" id="datesList">
+                            <p class="empty-message">No important dates added yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Goals Tab -->
+            <div id="goals" class="tab-content">
+                <h1>Weekly Goals</h1>
+                <div class="goals-container">
+                    <div class="add-goal-form">
+                        <h2>Add New Goal</h2>
+                        <form id="goalForm">
+                            <textarea id="goalText" placeholder="Enter your goal for this week..." required rows="3"></textarea>
+                            <select id="goalPriority">
+                                <option value="Low">Low Priority</option>
+                                <option value="Medium" selected>Medium Priority</option>
+                                <option value="High">High Priority</option>
+                            </select>
+                            <button type="submit" class="btn-add">Add Goal</button>
+                        </form>
+                    </div>
+                    <div class="goals-list-container">
+                        <h2>This Week's Goals</h2>
+                        <div class="goals-sections" id="goalsSections">
+                            <p class="empty-message">No goals added yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Study Statistics Tab -->
+            <div id="statistics" class="tab-content">
+                <h1>Study Statistics</h1>
+                <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); max-width: 1000px; margin: 0 auto;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div style="padding: 1rem; background: #fff9e6; border-left: 4px solid #FFD700; border-radius: 8px;">
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Date Range:</p>
+                            <input type="date" id="statsStartDate" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 100%; margin-bottom: 0.5rem;">
+                            <input type="date" id="statsEndDate" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 100%;">
+                            <button onclick="loadStudyStats()" style="width: 100%; margin-top: 1rem; padding: 0.75rem; background: #FFD700; color: #333; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">Load Stats</button>
+                        </div>
+                        <div style="padding: 1rem; background: #fff9e6; border-left: 4px solid #FFD700; border-radius: 8px;">
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Total Hours (Range):</p>
+                            <p style="font-size: 2rem; font-weight: bold; color: #FFD700;" id="rangeHours">0 hrs</p>
+                        </div>
+                        <div style="padding: 1rem; background: #fff9e6; border-left: 4px solid #FFD700; border-radius: 8px;">
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Total Sessions:</p>
+                            <p style="font-size: 2rem; font-weight: bold; color: #FFD700;" id="totalSessions">0</p>
+                        </div>
+                    </div>
+
+                    <h2 style="color: #333; margin-bottom: 1rem; border-bottom: 2px solid #FFD700; padding-bottom: 0.5rem;">Study Log (Date-wise)</h2>
+                    <div id="studyLogContainer" style="background: #f9f9f9; border-radius: 8px; padding: 1rem;">
+                        <p style="color: #999; text-align: center;">Select a date range and click "Load Stats" to view your study log</p>
+                    </div>
+
+                    <h2 style="color: #333; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid #FFD700; padding-bottom: 0.5rem;">Study by Subject</h2>
+                    <div id="subjectStatsContainer" style="background: #f9f9f9; border-radius: 8px; padding: 1rem;">
+                        <p style="color: #999; text-align: center;">Load stats to view subject-wise breakdown</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Tab -->
+            <div id="help" class="tab-content">
+                <h1>Help & Guide</h1>
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2>📊 Dashboard</h2>
+                        <p>Your central hub for seeing all your important metrics at a glance. View your total hours studied, number of subjects, upcoming deadlines, and weekly goals.</p>
+                    </div>
+                    <div class="help-section">
+                        <h2>⏱️ Pomodoro Timer</h2>
+                        <p>The Pomodoro Technique is a time management method using a timer to break work into focused intervals and short breaks. Each cycle consists of:</p>
+                        <ul>
+                            <li>25 minutes of focused work (focus time)</li>
+                            <li>5 minutes of break time</li>
+                        </ul>
+                        <p>Click "Start" to begin your focus session. The timer tracks your study time and adds it to your total hours studied on the dashboard.</p>
+                    </div>
+                    <div class="help-section">
+                        <h2>📚 Subjects</h2>
+                        <p>Track all your courses for the semester. For each subject, you can store:</p>
+                        <ul>
+                            <li>Subject name</li>
+                            <li>Professor name</li>
+                            <li>Class schedule</li>
+                            <li>Current grade</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h2>📅 Important Dates</h2>
+                        <p>Keep track of all your deadlines and important events. You can categorize them as Exams, Assignments, Projects, Quizzes, Presentations, or Other. Dates are automatically sorted to show upcoming deadlines first.</p>
+                    </div>
+                    <div class="help-section">
+                        <h2>🎯 Weekly Goals</h2>
+                        <p>Set weekly goals to keep yourself motivated and organized. You can prioritize each goal as High, Medium, or Low priority.</p>
+                    </div>
+                    <div class="help-section tips">
+                        <h2>💡 Tips for Success</h2>
+                        <ul>
+                            <li><strong>Use the Pomodoro Timer:</strong> Regular 25-minute focused sessions are more effective than long study periods.</li>
+                            <li><strong>Set Realistic Goals:</strong> Break down large tasks into smaller, manageable weekly goals.</li>
+                            <li><strong>Track Important Dates:</strong> Add deadlines as soon as you know about them to avoid surprises.</li>
+                            <li><strong>Update Your Grades:</strong> Keep your subject grades updated to monitor your progress.</li>
+                            <li><strong>Review Weekly:</strong> Check your dashboard regularly to stay on top of your commitments.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
