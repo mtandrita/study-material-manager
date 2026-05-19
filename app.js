@@ -1,7 +1,7 @@
 // Data Management
 class SemesterManager {
     constructor() {
-        this.hoursStudied = this.getFromStorage('hoursStudied', 0);
+        this.minutesStudied = this.getFromStorage('minutesStudied', 0);
         this.subjects = this.getFromStorage('subjects', []);
         this.dates = this.getFromStorage('dates', []);
         this.goals = this.getFromStorage('goals', []);
@@ -89,9 +89,8 @@ class SemesterManager {
     }
 
     addStudyTime(minutes) {
-        this.hoursStudied += minutes / 60;
-        this.hoursStudied = parseFloat(this.hoursStudied.toFixed(2));
-        this.saveToStorage('hoursStudied', this.hoursStudied);
+        this.minutesStudied += minutes;
+        this.saveToStorage('minutesStudied', this.minutesStudied);
         
         // Save to database as a study session
         const today = new Date().toISOString().split('T')[0];
@@ -139,7 +138,7 @@ function showTab(tabName) {
 
 // Dashboard
 function updateDashboard() {
-    document.getElementById('hoursDisplay').textContent = manager.hoursStudied + ' hrs';
+    document.getElementById('hoursDisplay').textContent = formatTimeDisplay(manager.minutesStudied);
     document.getElementById('subjectsCount').textContent = manager.subjects.length;
     document.getElementById('datesCount').textContent = manager.dates.length;
     document.getElementById('goalsCount').textContent = manager.goals.length;
@@ -174,12 +173,26 @@ function updateDashboard() {
     loadStreakData();
 }
 
+function formatTimeDisplay(minutes) {
+    if (minutes < 60) {
+        return `studied for ${minutes} min`;
+    } else {
+        const hours = Math.floor(minutes / 60);
+        const remainingMins = minutes % 60;
+        if (remainingMins === 0) {
+            return `studied for ${hours} hour${hours > 1 ? 's' : ''}`;
+        } else {
+            return `studied for ${hours}h ${remainingMins}m`;
+        }
+    }
+}
+
 function resetHours() {
-    if (confirm('Are you sure you want to reset the hours studied to 0? This action cannot be undone.')) {
-        manager.hoursStudied = 0;
-        manager.saveToStorage('hoursStudied', 0);
+    if (confirm('Are you sure you want to reset the time studied to 0? This action cannot be undone.')) {
+        manager.minutesStudied = 0;
+        manager.saveToStorage('minutesStudied', 0);
         updateDashboard();
-        alert('Hours studied have been reset to 0!');
+        alert('Time studied has been reset to 0!');
     }
 }
 
