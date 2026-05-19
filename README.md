@@ -26,47 +26,47 @@ A modern, feature-rich **semester management application** built with vanilla HT
 ## 📸 Screenshots & Demo
 
 ### Dashboard
-*Add screenshot of the main dashboard here*
+
 ![Dashboard](./screenshots/dashboard.png)
 
 ### Pomodoro Timer
-*Add screenshot of the Pomodoro timer in action*
+
 
 ![Pomodoro Timer](./screenshots/pomodoro.png)
 
 
 ### Subjects Management
-*Add screenshot of the subjects tab with PDF upload feature*
+
 
 ![Subjects Tab](./screenshots/subjects.png)
 
 
 ### Important Dates
-*Add screenshot of the important dates/deadlines section*
+
 
 ![Important Dates](./screenshots/dates.png)
 
 
 ### Weekly Goals
-*Add screenshot of the weekly goals management*
+
 
 ![Weekly Goals](./screenshots/goals.png)
 
 
 ### Study Statistics
-*Add screenshot of the study statistics and analytics*
+
 
 ![Study Statistics](./screenshots/statistics.png)
 
 
 ### Study Streak
-*Add screenshot showing the study streak feature*
+
 
 ![Study Streak](./screenshots/streak.png)
 
 
 ### 📹 Demo Video
-*Add embedded demo video here*
+
 ```
 [![Watch Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 ```
