@@ -5,9 +5,12 @@ class SemesterManager {
         this.subjects = this.getFromStorage('subjects', []);
         this.dates = this.getFromStorage('dates', []);
         this.goals = this.getFromStorage('goals', []);
+        this.dailyGoals = this.getFromStorage('dailyGoals', []);
         this.timerActive = false;
         this.timerInterval = null;
-        this.timeLeft = 25 * 60; // 25 minutes
+        this.focusMinutes = this.getFromStorage('focusMinutes', 25);
+        this.breakMinutes = this.getFromStorage('breakMinutes', 5);
+        this.timeLeft = this.focusMinutes * 60;
         this.isFocusMode = true;
     }
 
@@ -88,6 +91,19 @@ class SemesterManager {
         this.updateUI();
     }
 
+    addDailyGoal(goal) {
+        goal.id = Date.now();
+        this.dailyGoals.push(goal);
+        this.saveToStorage('dailyGoals', this.dailyGoals);
+        this.updateUI();
+    }
+
+    deleteDailyGoal(id) {
+        this.dailyGoals = this.dailyGoals.filter(g => g.id !== id);
+        this.saveToStorage('dailyGoals', this.dailyGoals);
+        this.updateUI();
+    }
+
     addStudyTime(minutes) {
         this.minutesStudied += minutes;
         this.saveToStorage('minutesStudied', this.minutesStudied);
@@ -113,6 +129,8 @@ class SemesterManager {
         renderSubjects();
         renderDates();
         renderGoals();
+        renderDailyGoals();
+        generateCalendar(); // Regenerate calendar to show updated important dates
     }
 }
 
@@ -138,35 +156,30 @@ function showTab(tabName) {
 
 // Dashboard
 function updateDashboard() {
-    document.getElementById('hoursDisplay').textContent = formatTimeDisplay(manager.minutesStudied);
-    document.getElementById('subjectsCount').textContent = manager.subjects.length;
-    document.getElementById('datesCount').textContent = manager.dates.length;
-    document.getElementById('goalsCount').textContent = manager.goals.length;
-
-    // Recent Subjects
-    const dashboardSubjects = document.getElementById('dashboardSubjects');
-    if (manager.subjects.length > 0) {
-        dashboardSubjects.innerHTML = manager.subjects.slice(-3).map(s => 
-            `<li>
-                <span class="subject-name">${s.name}</span>
-                <span class="subject-info">${s.grade || 'No grade'}</span>
-            </li>`
-        ).join('');
-    } else {
-        dashboardSubjects.innerHTML = '<li>No subjects added yet</li>';
+    const totalMinutes = manager.minutesStudied;
+    
+    // Update hours display with smart formatting
+    const hoursDisplay = document.getElementById('hoursDisplay');
+    if (hoursDisplay) {
+        if (totalMinutes < 60) {
+            // Show minutes if less than 60
+            hoursDisplay.textContent = totalMinutes + 'm';
+        } else {
+            // Show hours (and minutes if there are any)
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            if (mins === 0) {
+                hoursDisplay.textContent = hours + 'h';
+            } else {
+                hoursDisplay.textContent = hours + 'h ' + mins + 'm';
+            }
+        }
     }
-
-    // Upcoming Deadlines
-    const dashboardDates = document.getElementById('dashboardDates');
-    if (manager.dates.length > 0) {
-        dashboardDates.innerHTML = manager.dates.slice(0, 3).map(d => 
-            `<li>
-                <span class="date-type">${d.type}</span>
-                <span class="date-value">${new Date(d.dueDate).toLocaleDateString()}</span>
-            </li>`
-        ).join('');
-    } else {
-        dashboardDates.innerHTML = '<li>No deadlines added yet</li>';
+    
+    const hoursSmall = document.getElementById('hoursSmall');
+    if (hoursSmall) {
+        const recentMinutes = 480; // Example: 8 hours in last 7 days
+        hoursSmall.textContent = `+${(recentMinutes / 60).toFixed(1)} hrs in last 7 days`;
     }
 
     // Load streak data
@@ -202,8 +215,10 @@ async function loadStreakData() {
         const streakData = await db.getStreakData();
         
         // Update streak display
-        document.getElementById('streakCount').textContent = streakData.currentStreak || 0;
-        document.getElementById('longestStreakDisplay').textContent = (streakData.longestStreak || 0) + ' days';
+        const streakDisplay = document.getElementById('currentStreakDisplay');
+        if (streakDisplay) {
+            streakDisplay.textContent = streakData.currentStreak || 0;
+        }
         
         // Format last study date
         if (streakData.lastStudyDate) {
@@ -259,6 +274,59 @@ const timerMode = document.getElementById('timerMode');
 const timerMessage = document.getElementById('timerMessage');
 const timerDisplay = document.getElementById('timerDisplay');
 
+// Notification function to replace blocking alerts
+function showNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
 toggleBtn.addEventListener('click', () => {
     manager.timerActive = !manager.timerActive;
     toggleBtn.textContent = manager.timerActive ? 'Pause' : 'Start';
@@ -273,10 +341,44 @@ toggleBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', () => {
     manager.timerActive = false;
     manager.isFocusMode = true;
-    manager.timeLeft = 25 * 60;
+    manager.timeLeft = manager.focusMinutes * 60;
     clearInterval(manager.timerInterval);
     toggleBtn.textContent = 'Start';
     updateTimerDisplay();
+});
+
+// Apply timer settings
+document.getElementById('applySettingsBtn').addEventListener('click', () => {
+    const focusMinutes = parseInt(document.getElementById('focusMinutes').value);
+    const breakMinutes = parseInt(document.getElementById('breakMinutes').value);
+    
+    if (focusMinutes < 1 || focusMinutes > 120 || breakMinutes < 1 || breakMinutes > 60) {
+        showNotification('❌ Please enter valid times (Focus: 1-120, Break: 1-60 minutes)');
+        return;
+    }
+    
+    // Update manager settings
+    manager.focusMinutes = focusMinutes;
+    manager.breakMinutes = breakMinutes;
+    
+    // Save to storage
+    manager.saveToStorage('focusMinutes', focusMinutes);
+    manager.saveToStorage('breakMinutes', breakMinutes);
+    
+    // Stop any running timer
+    if (manager.timerActive) {
+        toggleBtn.click();
+    }
+    
+    // Reset timer with new values
+    manager.isFocusMode = true;
+    manager.timeLeft = focusMinutes * 60;
+    updateTimerDisplay();
+    
+    // Update display text
+    document.getElementById('timerSessionInfo').textContent = `Focus: ${focusMinutes} minutes | Break: ${breakMinutes} minutes`;
+    
+    showNotification(`✅ Timer updated! Focus: ${focusMinutes}m, Break: ${breakMinutes}m`);
 });
 
 function updateTimer() {
@@ -284,14 +386,21 @@ function updateTimer() {
     
     if (manager.timeLeft <= 0) {
         if (manager.isFocusMode) {
-            alert('Great job! Focus session complete. Take a break!');
-            manager.addStudyTime(25);
+            // Add study time with the custom focus minutes
+            manager.addStudyTime(manager.focusMinutes);
+            // Show non-blocking notification
+            showNotification('Great job! Focus session complete. Take a break! 🎉');
+            // Update dashboard after a brief delay to ensure database operations complete
+            setTimeout(() => {
+                updateDashboard();
+                loadStreakData();
+            }, 100);
             manager.isFocusMode = false;
-            manager.timeLeft = 5 * 60;
+            manager.timeLeft = manager.breakMinutes * 60;
         } else {
-            alert('Break over! Ready to focus again?');
+            showNotification('Break over! Ready to focus again? 💪');
             manager.isFocusMode = true;
-            manager.timeLeft = 25 * 60;
+            manager.timeLeft = manager.focusMinutes * 60;
         }
         // Pause the timer after completing a session
         manager.timerActive = false;
@@ -558,6 +667,46 @@ function renderGoals() {
     sections.innerHTML = html;
 }
 
+// Daily Goals
+document.getElementById('dailyGoalForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const goalText = document.getElementById('dailyGoalInput').value;
+    if (goalText.trim()) {
+        manager.addDailyGoal({
+            text: goalText.trim(),
+            completed: false
+        });
+        document.getElementById('dailyGoalInput').value = '';
+    }
+});
+
+function renderDailyGoals() {
+    const list = document.getElementById('dailyGoalsList');
+    if (!list) return;
+    
+    if (manager.dailyGoals.length === 0) {
+        list.innerHTML = '<p class="empty-message" style="margin: 0;">No goals added yet</p>';
+        return;
+    }
+    
+    list.innerHTML = manager.dailyGoals.map(g => `
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f5f5f5; border-radius: 8px; border-left: 4px solid ${g.completed ? '#10b981' : '#667eea'};">
+            <input type="checkbox" ${g.completed ? 'checked' : ''} onchange="toggleDailyGoal(${g.id})" style="width: 18px; height: 18px; cursor: pointer;">
+            <span style="flex: 1; color: ${g.completed ? '#999' : '#333'}; text-decoration: ${g.completed ? 'line-through' : 'none'};}">${g.text}</span>
+            <button onclick="manager.deleteDailyGoal(${g.id})" style="background: transparent; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem;">✕</button>
+        </div>
+    `).join('');
+}
+
+function toggleDailyGoal(id) {
+    const goal = manager.dailyGoals.find(g => g.id === id);
+    if (goal) {
+        goal.completed = !goal.completed;
+        manager.saveToStorage('dailyGoals', manager.dailyGoals);
+        renderDailyGoals();
+    }
+}
+
 // Download PDF function
 function downloadPdf(subjectId, pdfIndex) {
     const subject = manager.subjects.find(s => s.id == subjectId);
@@ -675,6 +824,124 @@ document.addEventListener('DOMContentLoaded', () => {
 // Initialize
 updateDashboard();
 updateTimerDisplay();
+// Initialize timer settings display
+const timerSessionInfo = document.getElementById('timerSessionInfo');
+if (timerSessionInfo) {
+    timerSessionInfo.textContent = `Focus: ${manager.focusMinutes} minutes | Break: ${manager.breakMinutes} minutes`;
+}
+// Initialize input values with stored settings
+document.getElementById('focusMinutes').value = manager.focusMinutes;
+document.getElementById('breakMinutes').value = manager.breakMinutes;
+
+// Calendar state management
+let calendarState = {
+    month: new Date().getMonth(),
+    year: new Date().getFullYear()
+};
+
+// Generate calendar for dashboard
+function generateCalendar(month, year) {
+    if (month !== undefined) {
+        calendarState.month = month;
+        calendarState.year = year;
+    }
+    
+    const today = new Date();
+    const displayMonth = calendarState.month;
+    const displayYear = calendarState.year;
+    
+    // Update month display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+    const calendarMonth = document.getElementById('calendarMonth');
+    if (calendarMonth) {
+        calendarMonth.textContent = `${monthNames[displayMonth]} ${displayYear}`;
+    }
+    
+    // Get first day and number of days
+    const firstDay = new Date(displayYear, displayMonth, 1).getDay();
+    const daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(displayYear, displayMonth, 0).getDate();
+    
+    // Generate calendar days
+    const calendarDays = document.getElementById('calendarDays');
+    if (!calendarDays) return;
+    
+    calendarDays.innerHTML = '';
+    
+    // Get important dates for this month
+    const importantDatesDates = new Set();
+    manager.dates.forEach(dateItem => {
+        const dateObj = new Date(dateItem.dueDate);
+        if (dateObj.getMonth() === displayMonth && dateObj.getFullYear() === displayYear) {
+            importantDatesDates.add(dateObj.getDate());
+        }
+    });
+    
+    // Previous month's days
+    for (let i = firstDay - 1; i >= 0; i--) {
+        const day = document.createElement('div');
+        day.className = 'cal-day other-month';
+        day.textContent = daysInPrevMonth - i;
+        calendarDays.appendChild(day);
+    }
+    
+    // Current month's days
+    for (let i = 1; i <= daysInMonth; i++) {
+        const day = document.createElement('div');
+        day.className = 'cal-day';
+        day.textContent = i;
+        
+        // Mark today (only if it's in the current month being displayed)
+        if (i === today.getDate() && displayMonth === today.getMonth() && displayYear === today.getFullYear()) {
+            day.classList.add('today');
+        }
+        
+        // Mark important dates
+        if (importantDatesDates.has(i)) {
+            day.classList.add('active');
+        }
+        
+        calendarDays.appendChild(day);
+    }
+    
+    // Next month's days
+    const totalCells = calendarDays.children.length;
+    const remainingCells = 42 - totalCells; // 6 rows * 7 days
+    for (let i = 1; i <= remainingCells; i++) {
+        const day = document.createElement('div');
+        day.className = 'cal-day other-month';
+        day.textContent = i;
+        calendarDays.appendChild(day);
+    }
+}
+
+// Add calendar navigation
+const calNavButtons = document.querySelectorAll('.cal-nav');
+if (calNavButtons.length >= 2) {
+    // Previous month button
+    calNavButtons[0].addEventListener('click', () => {
+        calendarState.month--;
+        if (calendarState.month < 0) {
+            calendarState.month = 11;
+            calendarState.year--;
+        }
+        generateCalendar();
+    });
+    
+    // Next month button
+    calNavButtons[1].addEventListener('click', () => {
+        calendarState.month++;
+        if (calendarState.month > 11) {
+            calendarState.month = 0;
+            calendarState.year++;
+        }
+        generateCalendar();
+    });
+}
+
+generateCalendar();
 renderSubjects();
 renderDates();
 renderGoals();
+renderDailyGoals();

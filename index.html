@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semester Manager 2.0</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -26,76 +27,83 @@
         <main class="content">
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
-                <h1>Dashboard</h1>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">⏱️</div>
-                        <div class="stat-content">
-                            <h3>Time Studied</h3>
-                            <p class="stat-value" id="hoursDisplay">studied for 0 min</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📚</div>
-                        <div class="stat-content">
-                            <h3>Subjects</h3>
-                            <p class="stat-value" id="subjectsCount">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📅</div>
-                        <div class="stat-content">
-                            <h3>Upcoming Deadlines</h3>
-                            <p class="stat-value" id="datesCount">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🎯</div>
-                        <div class="stat-content">
-                            <h3>Weekly Goals</h3>
-                            <p class="stat-value" id="goalsCount">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card streak-card">
-                        <div class="stat-icon">🔥</div>
-                        <div class="stat-content">
-                            <h3>Study Streak</h3>
-                            <p class="stat-value" id="streakCount">0</p>
-                            <p class="streak-subtitle" id="streakSubtitle">days</p>
-                        </div>
-                    </div>
+                <div class="dashboard-header">
+                    <h1>Dashboard</h1>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto;">
-                    <div class="streak-info-box">
-                        <h3>🏆 Longest Streak</h3>
-                        <p class="streak-record" id="longestStreakDisplay">0 days</p>
-                        <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">Your best consecutive days!</p>
-                    </div>
-                    <div class="streak-info-box">
-                        <h3>⏰ Last Study</h3>
-                        <p class="streak-record" id="lastStudyDisplay">Never</p>
-                        <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">Keep the streak alive!</p>
-                    </div>
-                </div>
+                <!-- Main Grid Layout -->
+                <div class="dashboard-grid">
+                    <!-- Left Column -->
+                    <div class="dashboard-column left">
+                        <!-- Daily Goals Card -->
+                        <div class="stat-card-large">
+                            <div class="card-header">
+                                <h3>📋 Daily Goals</h3>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <form id="dailyGoalForm" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                    <input type="text" id="dailyGoalInput" placeholder="Add today's goal..." style="flex: 1; padding: 0.75rem; border: 2px solid #667eea; border-radius: 8px; font-size: 0.95rem;">
+                                    <button type="submit" style="background: #667eea; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">Add</button>
+                                </form>
+                                <div id="dailyGoalsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <p class="empty-message" style="margin: 0;">No goals added yet</p>
+                                </div>
+                            </div>
+                        </div>
 
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <button id="resetHoursBtn" class="btn btn-danger" onclick="resetHours()">Reset Hours Studied</button>
-                    <button id="resetStreakBtn" class="btn btn-danger" onclick="resetStreak()" style="margin-left: 1rem;">Reset Streak</button>
-                </div>
+                        <!-- Total Study Hours -->
+                        <div class="stat-card-large">
+                            <div class="card-header">
+                                <h3>⏱️ Total Study Hours</h3>
+                            </div>
+                            <p class="hours-big" id="hoursDisplay">287</p>
+                            <p class="hours-small" id="hoursSmall">+8 hrs in last 7 days</p>
+                            <div style="position: relative; height: 150px; margin-top: 1rem;">
+                                <canvas id="studyHoursChart"></canvas>
+                            </div>
+                        </div>
 
-                <div class="dashboard-sections">
-                    <div class="dashboard-section">
-                        <h2>Recent Subjects</h2>
-                        <ul class="subjects-list" id="dashboardSubjects">
-                            <li>No subjects added yet</li>
-                        </ul>
+
                     </div>
-                    <div class="dashboard-section">
-                        <h2>Upcoming Deadlines</h2>
-                        <ul class="dates-list" id="dashboardDates">
-                            <li>No deadlines added yet</li>
-                        </ul>
+
+                    <!-- Right Column -->
+                    <div class="dashboard-column right">
+                        <!-- Calendar Card -->
+                        <div class="stat-card-large calendar-card">
+                            <div class="card-header">
+                                <button class="cal-nav">&lt;</button>
+                                <h3 id="calendarMonth">August 2022</h3>
+                                <button class="cal-nav">&gt;</button>
+                            </div>
+                            <div class="calendar">
+                                <div class="cal-header">
+                                    <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                                </div>
+                                <div class="cal-days" id="calendarDays">
+                                    <!-- Generated by JS -->
+                                </div>
+                            </div>
+                            <div class="streak-info-mini">
+                                <div>
+                                    <p class="label">🔥 Current Streak</p>
+                                    <p class="number" id="currentStreakDisplay">0</p>
+                                    <p class="subtext">Days</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Your Predicted Rank -->
+                        <div class="stat-card-medium">
+                            <h3>🏆 Your Predicted Rank</h3>
+                            <p class="rank-number">1255</p>
+                            <div class="rank-bar">
+                                <div class="rank-marker" style="left: 60%;"></div>
+                            </div>
+                        </div>
+
+
+
+
                     </div>
                 </div>
             </div>
@@ -103,6 +111,23 @@
             <!-- Pomodoro Tab -->
             <div id="pomodoro" class="tab-content">
                 <h1>Pomodoro Timer</h1>
+                
+                <!-- Settings Section -->
+                <div style="max-width: 500px; margin: 0 auto 2rem; background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="margin-top: 0; color: #333;">⚙️ Timer Settings</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label for="focusMinutes" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">Focus Time (minutes)</label>
+                            <input type="number" id="focusMinutes" min="1" max="120" value="25" style="width: 100%; padding: 0.75rem; border: 2px solid #FFD700; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        <div>
+                            <label for="breakMinutes" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555;">Break Time (minutes)</label>
+                            <input type="number" id="breakMinutes" min="1" max="60" value="5" style="width: 100%; padding: 0.75rem; border: 2px solid #FFD700; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="applySettingsBtn" style="width: 100%; margin-top: 1rem;">Apply Settings</button>
+                </div>
+
                 <div class="timer-container">
                     <div class="timer-display" id="timerDisplay">
                         <div class="timer-mode" id="timerMode">Focus Time</div>
@@ -113,7 +138,7 @@
                         <button class="btn btn-secondary" id="resetBtn">Reset</button>
                     </div>
                     <div class="timer-info">
-                        <p>Focus: 25 minutes | Break: 5 minutes</p>
+                        <p id="timerSessionInfo">Focus: 25 minutes | Break: 5 minutes</p>
                         <p id="timerMessage">Stay focused! You can do this! 💪</p>
                     </div>
                 </div>
